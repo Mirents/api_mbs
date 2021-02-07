@@ -62,6 +62,13 @@
             <scope>test</scope>
             <type>jar</type>
         </dependency>
+        
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <version>2.1</version>
+        </dependency>
+
     </dependencies>
     
     <!-- Параметры подключаемых плагинов -->

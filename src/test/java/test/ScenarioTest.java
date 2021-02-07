@@ -1,12 +1,28 @@
 package test;
 
 import org.junit.jupiter.api.*;
-import test.base.TestBase;
+import pages.DebetCard;
+import pages.HomePage;
+import pages.YouthCard;
+import test.base.BaseTest;
 
-public class ScenarioTest extends TestBase {
+@DisplayName("A special test case")
+public class ScenarioTest extends BaseTest {
     
     @Test
-    static void MyTest() {
-        System.out.println("123");
+    public void MyTest() throws InterruptedException {
+        HomePage homePage = new HomePage(driver);
+        DebetCard debetCard = new DebetCard(driver);
+        YouthCard youthCard = new YouthCard(driver);
+
+        homePage.clickButtonMenu();
+        homePage.clickButtonPodMenu();
+        debetCard.checkLabelPage();
+        debetCard.checkAndClickCards();
+        youthCard.checkLabelPage();
+        //youthCard.clickButtonIssueOnline();
+        youthCard.fillInputs();
+        youthCard.clickButtonNext();
+        youthCard.checkInput();
     }
 }
