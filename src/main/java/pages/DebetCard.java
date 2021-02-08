@@ -33,7 +33,6 @@ public class DebetCard {
                 + "(@class, 'kitt-button__text') and contains(text(), 'Заказать онлайн')]";
         
         Assertions.assertEquals(labelCards.getText(), "Молодёжная карта");
-        System.out.println(labelCards.getLocation());
         WebElement buttonGetCards = driver.findElement(By.xpath(buttonGetCardsXPath));
         buttonGetCards.click();
     }

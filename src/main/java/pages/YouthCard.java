@@ -1,12 +1,7 @@
 package pages;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
@@ -15,6 +10,10 @@ import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+/**
+ * Класс страницы оформления молодежной карты
+ * @author vadim
+ */
 public class YouthCard {
     WebDriver driver;
     WebDriverWait wait;
@@ -50,13 +49,13 @@ public class YouthCard {
     @FindBy(xpath = "//button[contains(@class, 'odcui-button odcui-button_color_black')]")
     WebElement buttonNext;
     
-    @FindBy(xpath = "//input[contains(@data-name, 'series')]//..//div[contains(@class, 'odcui-error__text')]")
+    @FindBy(xpath = "//input[contains(@data-name, 'series')]")
     WebElement inputSeries;
     
-    @FindBy(xpath = "//input[contains(@data-name, 'number')]//..//div[contains(@class, 'odcui-error__text')]")
+    @FindBy(xpath = "//input[contains(@data-name, 'number')]")
     WebElement inputNumber;
     
-    @FindBy(xpath = "//input[contains(@data-name, 'issuedate')]//..//div[contains(@class, 'odcui-error__text')]")
+    @FindBy(xpath = "//input[contains(@data-name, 'issueDate')]")
     WebElement inputIssueDate;
     
     public YouthCard(WebDriver driver) {
@@ -73,40 +72,67 @@ public class YouthCard {
         buttonIssueOnline.click();
     }
 
-    public void fillInputs() {
-
+    /**
+     * Заполнение полей формы для оформления молодежной карты с одновременной
+     * проверкой правильности заполнения
+     */
+    public void fillInputs(String lastName, String firstName,
+            String middleName, String cardName, String birthDate,
+            String email, String phone) {
+        // Ожидание перемотки страницы к элементам формы
         wait.until(ExpectedConditions.visibilityOf(inputFieldLastName));
-        inputFieldLastName.sendKeys("Антонов");
-        Assertions.assertEquals(inputFieldLastName.getAttribute("value"), "Антонов");
-        
-        inputFieldFirstName.sendKeys("Михаил");
-        Assertions.assertEquals(inputFieldFirstName.getAttribute("value"), "Михаил");
-        
-        inputFieldMiddleName.sendKeys("Иванович");
-        Assertions.assertEquals(inputFieldMiddleName.getAttribute("value"), "Иванович");
-        
+        fillInput(inputFieldLastName, lastName);
+        fillInput(inputFieldFirstName, firstName);
+        fillInput(inputFieldMiddleName, middleName);
+        // Поле ввода имени держателя карты требует обязательной очистки,
+        // иначе, по крайней мере у меня сохранялось старое значение и 
+        // повторно вводилось новое
         inputFieldCardName.clear();
-        inputFieldCardName.sendKeys("MIHAIL ANTONOV");
-        Assertions.assertEquals(inputFieldCardName.getAttribute("value"), "MIHAIL ANTONOV");
+        fillInput(inputFieldCardName, cardName);
+        fillInput(inputFieldBirthDate, birthDate);
+        fillInput(inputFieldEmail, email);
         
-        inputFieldBirthDate.sendKeys("22.02.2004");
-        Assertions.assertEquals(inputFieldBirthDate.getAttribute("value"), "22.02.2004");
-        
-        inputFieldEmail.sendKeys("antmih@mail.ru");
-        Assertions.assertEquals(inputFieldEmail.getAttribute("value"), "antmih@mail.ru");
-        
+        // Ожидание конца ввода и валидации полей
         try {
             Thread.sleep(1000);
         } catch (InterruptedException ex) {}
         
+        // Перемотка к полю ввода телефона и ввод с проверкой
         Actions actions = new Actions(driver);
         actions.click(inputFieldPhone);
         actions.perform();
-        
-        inputFieldPhone.sendKeys("9681278345");
-        Assertions.assertEquals(inputFieldPhone.getAttribute("value"), "+7 (968) 127-83-45");
+        inputFieldPhone.sendKeys(phone);
+        Assertions.assertEquals(getPhoneInMask(phone), inputFieldPhone.getAttribute("value"));
     }
     
+    /**
+     * Запуск заполнения полей дефолтными значениями
+     */
+    public void fillInputs() {
+        fillInputs("Антонов", "Михаил", "Иванович", "MIHAIL ANTONOV",
+                "22.02.2004", "antmih@mail.ru", "9681278345");
+    }
+    
+    /**
+     * Метод разбора номера с возвратом по маске телефона
+     * Пример:
+     * @param phone = "9681278345"
+     * @return "+7 (968) 127-83-45"
+     */
+    private String getPhoneInMask(String phone) {
+        String result = "+7 (" + phone.substring(0, 3) + ") " + phone.substring(3, 6) +
+                   "-" + phone.substring(6, 8) + "-" + phone.substring(8, 10);
+        return result;
+    }
+    
+    private void fillInput(WebElement element, String value) {
+        element.sendKeys(value);
+        Assertions.assertEquals(value, element.getAttribute("value"));
+    }
+    
+    /**
+     * Нажатие на кнопку "Далее"
+     */
     public void clickButtonNext() {
         Actions actions = new Actions(driver);
         try {
@@ -125,10 +151,17 @@ public class YouthCard {
         } catch (InterruptedException ex) {}
     }
     
-    public void checkInput() {
-        System.out.println("------->" + inputSeries.getText());
-        Assertions.assertEquals(inputSeries.getText(), "Обязательное поле");
-        Assertions.assertEquals(inputNumber.getText(), "Обязательное поле");
-        Assertions.assertEquals(inputIssueDate.getText(), "Обязательное поле");
+    /**
+     * Проверка наличия ошибок в незаполенный полях
+     */
+    public void isErrorCheckInput() {        
+        Assertions.assertEquals("Обязательное поле", inputSeries.findElement(By.xpath
+                ("..//div[contains(@class, 'odcui-error__text')]")).getText());
+        
+        Assertions.assertEquals("Обязательное поле", inputNumber.findElement(By.xpath
+                ("..//div[contains(@class, 'odcui-error__text')]")).getText());
+        
+        Assertions.assertEquals("Обязательное поле", inputIssueDate.findElement(By.xpath
+                ("..//..//..//div[contains(@class, 'odcui-error__text')]")).getText());
     }
 }
